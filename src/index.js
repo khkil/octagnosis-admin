@@ -1,19 +1,49 @@
-import "react-app-polyfill/ie11";
-import "react-app-polyfill/stable";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+import { BrowserRouter } from 'react-router-dom';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import { persistStore } from 'redux-persist';
+import { PersistGate } from 'redux-persist/integration/react';
+import rootReducer, { rootSaga } from './modules';
+import { composeWithDevTools } from 'redux-devtools-extension';
+import createSagaMiddleware from 'redux-saga';
+import logger from 'redux-logger';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
-import React from "react";
-import ReactDOM from "react-dom";
-import App from "./App";
+const sagaMiddleware = createSagaMiddleware();
+const store = createStore(
+  rootReducer,
+  //composeWithDevTools(applyMiddleware(sagaMiddleware, logger))
+  composeWithDevTools(applyMiddleware(sagaMiddleware)),
+);
+const persistor = persistStore(store);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 0,
+      useErrorBoundary: true, // Fallback Ui 설정
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      useErrorBoundary: true,
+    },
+  },
+});
 
-import { Provider } from "react-redux";
-import store from "./redux/store/index";
-import {BrowserRouter} from "react-router-dom";
-
+sagaMiddleware.run(rootSaga);
 ReactDOM.render(
-  <BrowserRouter>
+  <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <PersistGate loading={null} persistor={persistor}>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </PersistGate>
     </Provider>
-  </BrowserRouter>,
-  document.getElementById("root")
+  </React.StrictMode>,
+  document.getElementById('root'),
 );
