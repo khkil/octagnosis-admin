@@ -23,18 +23,10 @@ module.exports = (webpackEnv) => {
     module: {
       rules: [
         {
-          test: /\.[jt]sx?$/,
-          exclude: /node_modules/,
-          use: [
-            {
-              loader: require.resolve("babel-loader"),
-              options: {
-                plugins: [
-                  isDevelopment && require.resolve("react-refresh/babel"),
-                ].filter(Boolean),
-              },
-            },
-          ],
+          test: /\.(js|jsx)$/,
+          exclude: /(node_modules|bower_components)/,
+          loader: "babel-loader",
+          options: { presets: ["@babel/env", "@babel/preset-react"] },
         },
         {
           test: /\.css/,
